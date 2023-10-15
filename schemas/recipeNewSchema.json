@@ -1,0 +1,38 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://example.com/example.json",
+    "type": "object",
+    "properties": {
+    "userId": {
+        "type": "integer"
+    },
+    "title": {
+        "type": "string",
+        "minLength": 3,
+        "maxLength": 60
+    },
+    "preparation": {
+        "type": "string",
+        "maxLength": 750
+    },
+    "description":{
+        "type": "string",
+        "maxLength": 100
+    },
+    "servings":{
+        "type":"integer"
+    },
+    "urlImage":{
+        "type":"string",
+        "format": "uri"
+    }
+    },
+    "additionalProperties": false,
+    "required": [
+      "userId",
+      "title",
+      "preparation",
+      "description",
+      "servings"
+    ]
+  }

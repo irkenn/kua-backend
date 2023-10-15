@@ -14,9 +14,30 @@ VALUES(
     'www.yahoo.com'
     );
 
-INSERT INTO ingredients (id, name, unit, amount, kcal, protein, fiber, fat, carbohydrates)
+INSERT INTO recipe_info ( user_id, title, cal_count, preparation, description, servings, url_image)
+
+VALUES(
+    1,
+    'Frijoles con grasa',
+    1200,
+    'Mezclas los frijoles con el aceite y vualá',
+    'Sacada de las obras negras más demandantes del país',
+    2,
+    'www.google.com'
+    ),
+    (
+    1,
+    'Conejo con ejotes',
+    666,
+    'Lleva conejo y ejotes',
+    'Da risa',
+    1,
+    'www.yahoo.com');
+
+INSERT INTO ingredients (id, recipe_id, name, unit, amount, kcal, protein, fiber, fat, carbohydrates)
 VALUES(
     4582,
+    1,
     'oil',
     'teaspoon',
     1.0,
@@ -27,6 +48,7 @@ VALUES(
     0.0
     ),
     (16202,
+    1,
     'refried beans',
     'cup',
     0.5,
@@ -36,18 +58,6 @@ VALUES(
     0.0,
     0.53);
 
-INSERT INTO recipe_info ( id, user_id, title, cal_count, preparation, description, servings, url_image)
-
-VALUES(
-    1,
-    1,
-    'Frijoles con grasa',
-    1200,
-    'Mezclas los frijoles con el aceite y vualá',
-    'Sacada de las obras negras más demandantes del país',
-    2,
-    'www.google.com'
-);
 
 INSERT INTO rating_votes ( recipe_id, user_id, rating)
 VALUES (1, 1, 5), 
