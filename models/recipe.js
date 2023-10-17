@@ -30,39 +30,7 @@ class Recipe {
                             }) 
         queryLine = queryLine.join(' OR title ILIKE ');
 
-        //This query is a mini version of 'recipes' it does not include the ingredients.
-        const query = `SELECT   
-                          r.id,
-                          r.title,
-                          r.cal_count AS "calCount",
-                          r.preparation,
-                          r.description,
-                          r.created_at AS "createdAt",
-                          r.servings,
-                          r.url_image AS "urlImage",
-                            (SELECT 
-                                jsonb_build_object
-                                (
-                                  'id', u.id,
-                                  'username', u.username,
-                                  'bioInfo', u.bio_info,
-                                  'urlImage', u.url_image
-                                )
-                              FROM users AS "u"
-                              WHERE u.id = r.user_id
-                            ) AS "user"
-                        FROM recipe_info AS "r"
-                        LEFT JOIN users AS "u" ON (r.user_id = u.id)
-                        WHERE title ILIKE ${queryLine}`
-
-        const recipeRes = await db.query(query, [...queryKeywords] )
-
-        return recipeRes.rows[0];
-    }
-
-    static async get( recipeID ) {
-      // this will retrieve the recipe based on the id
-      const query = `SELECT
+        const query = `SELECT
                         r.id,
                         r.title,
                         r.cal_count AS "calCount",
@@ -71,6 +39,11 @@ class Recipe {
                         r.created_at AS "createdAt",
                         r.servings,
                         r.url_image AS "urlImage",
+                        (
+                          SELECT ROUND(AVG(ra.rating), 1)
+                          FROM rating_votes AS "ra"
+                          WHERE ra.recipe_id = r.id
+                      ) AS "avgRating",
                         (
                             SELECT jsonb_build_object(
                                 'id', u.id,
@@ -94,19 +67,74 @@ class Recipe {
                                 'carbohydrates', i.carbohydrates
                             )
                         ) AS "ingredients"
-                      FROM recipe_info AS "r"
-                      LEFT JOIN users AS "u" ON (r.user_id = u.id)
-                      LEFT JOIN ingredients AS "i" ON (r.id = i.recipe_id)
-                      WHERE r.id = $1
-                      GROUP BY r.id, r.title, r.cal_count, r.preparation, r.description, r.created_at, r.servings, r.url_image, r.user_id;`
-  
-        
+                    FROM recipe_info AS "r"
+                    LEFT JOIN users AS "u" ON (r.user_id = u.id)
+                    LEFT JOIN ingredients AS "i" ON (r.id = i.recipe_id)
+                    WHERE title ILIKE ${queryLine}
+                    GROUP BY r.id, r.title, r.cal_count, r.preparation, r.description, r.created_at, r.servings, r.url_image, r.user_id;`;
+
+        //This query is a mini version of 'recipes' it does not include the ingredients.
+
+        const recipeRes = await db.query(query, [...queryKeywords] )
+
+        if(!recipeRes.rows[0]) throw new NotFoundError(`The query didn't produced any results`);
+
+        return recipeRes.rows;
+    }
+
+    static async get( recipeID ) {
+      // this will retrieve the recipe based on the id
+     
+      const query = `SELECT
+                        r.id,
+                        r.title,
+                        r.cal_count AS "calCount",
+                        r.preparation,
+                        r.description,
+                        r.created_at AS "createdAt",
+                        r.servings,
+                        r.url_image AS "urlImage",
+                        (
+                          SELECT ROUND(AVG(ra.rating), 1)
+                          FROM rating_votes AS "ra"
+                          WHERE ra.recipe_id = r.id
+                      ) AS "avgRating",
+                        (
+                            SELECT jsonb_build_object(
+                                'id', u.id,
+                                'username', u.username,
+                                'bioInfo', u.bio_info,
+                                'urlImage', u.url_image
+                            )
+                            FROM users AS "u"
+                            WHERE u.id = r.user_id
+                        ) AS "user",
+                        jsonb_agg(
+                            jsonb_build_object(
+                                'id', i.id,
+                                'name', i.name,
+                                'unit', i.unit,
+                                'amount', i.amount,
+                                'kCal', i.kcal,
+                                'protein', i.protein,
+                                'fiber', i.fiber,
+                                'fat', i.fat,
+                                'carbohydrates', i.carbohydrates
+                            )
+                        ) AS "ingredients"
+                    FROM recipe_info AS "r"
+                    LEFT JOIN users AS "u" ON (r.user_id = u.id)
+                    LEFT JOIN ingredients AS "i" ON (r.id = i.recipe_id)
+                    WHERE r.id = $1
+                    GROUP BY r.id, r.title, r.cal_count, r.preparation, r.description, r.created_at, r.servings, r.url_image, r.user_id;`;
+      
       const response = await db.query(query, [recipeID]);
 
       if (!response) throw new NotFoundError(`No recipe with ID ${recipeID}`);
 
       return response.rows[0];
     }
+
 
     static async new( { userId, title, preparation, description, servings, urlImage } ){
       
@@ -136,6 +164,7 @@ class Recipe {
       
       return result.rows[0];
     }
+
 
     static async update( recipeData, userId ){
 
@@ -180,6 +209,46 @@ class Recipe {
       }
       throw new BadRequestError();
     }
+  
+    static async home(){
+      
+      const query = `SELECT
+                        r.id,
+                        r.title,
+                        r.cal_count AS "calCount",
+                        r.preparation,
+                        r.description,
+                        r.created_at AS "createdAt",
+                        r.servings,
+                        r.url_image AS "urlImage",
+                        (
+                          SELECT ROUND(AVG(ra.rating), 1)
+                          FROM rating_votes AS "ra"
+                          WHERE ra.recipe_id = r.id
+                      ) AS "avgRating",
+                        (
+                            SELECT jsonb_build_object(
+                                'id', u.id,
+                                'username', u.username,
+                                'bioInfo', u.bio_info,
+                                'urlImage', u.url_image
+                            )
+                            FROM users AS "u"
+                            WHERE u.id = r.user_id
+                        ) AS "user"
+                    FROM recipe_info AS "r"
+                    LEFT JOIN users AS "u" ON (r.user_id = u.id)
+                    GROUP BY r.id, r.title, r.cal_count, r.preparation, r.description, r.created_at, r.servings, r.url_image, r.user_id
+                    ORDER BY r.created_at;`;
+
+        //This query is a mini version of 'recipes' it does not include the ingredients.
+
+        const recipeRes = await db.query( query );
+
+        return recipeRes.rows;
+
+    }
+
   }
 
   module.exports = Recipe;

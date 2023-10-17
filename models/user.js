@@ -95,6 +95,14 @@ class User {
     }
 
 
+    static async homepage(){
+        //This gets all the info for the user to visualize the homepage
+
+        // Each recipe will have the user info and the rating 
+
+
+    }
+
     static async get( username ){
         const userRes = await db.query(
             `SELECT id,

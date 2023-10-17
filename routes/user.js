@@ -6,6 +6,7 @@ const router = express.Router();
 const { BadRequestError, NotFoundError } = require("../expressError");
 
 const User = require("../models/user");
+const Recipe = require("../models/recipe");
 const { createToken } = require("../helpers/tokens");
 
 
@@ -15,6 +16,20 @@ const userEditSchema = require("../schemas/userEditSchema.json");
 const userDeleteShema = require("../schemas/userDeleteSchema.json");
 
 const bcrypt = require("bcrypt");
+
+router.get("/home", async function( req, res, next){
+    try{
+        const response = await Recipe.home();
+        return res.json( response );
+
+    }catch (err){
+        return next(err);
+    }
+
+});
+
+
+
 
 router.get("/:username", async function(req, res, next){
     try{
