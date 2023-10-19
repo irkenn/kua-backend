@@ -4,7 +4,7 @@ const db = require("../db");
 const bcrypt = require("bcrypt");
 const crypto = require('crypto');
 const { BCRYPT_WORK_FACTOR } = require("../config.js");
-
+const { createToken } = require("../helpers/tokens");
 // Helper functions
 const { sqlForPartialUpdate } = require("../helpers/helpers");
 
@@ -91,17 +91,13 @@ class User {
         );
         
         const user = result.rows[0];
+        //Add the token as part of the signup process
+        const token = createToken(user);
+        user.token = token;
+        
         return user;
     }
 
-
-    static async homepage(){
-        //This gets all the info for the user to visualize the homepage
-
-        // Each recipe will have the user info and the rating 
-
-
-    }
 
     static async get( username ){
         const userRes = await db.query(
