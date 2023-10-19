@@ -80,7 +80,8 @@ class User {
                 bio_info,
                 url_image)
                 VALUES ($1, $2, $3, $4, $5)
-                RETURNING   username,
+                RETURNING   id,
+                            username,
                             bio_info AS "bioInfo",
                             url_image AS "urlImage"`,
             [   username,
