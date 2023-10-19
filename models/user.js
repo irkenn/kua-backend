@@ -92,7 +92,7 @@ class User {
         
         const user = result.rows[0];
         //Add the token as part of the signup process
-        const token = createToken(user);
+        const token = await createToken(user);
         user.token = token;
         
         return user;
