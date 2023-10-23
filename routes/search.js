@@ -31,10 +31,32 @@ router.get("/ingredients/:ingredientName", async function (req, res, next){
     }
 });
 
+
+router.get("/ingredients/:ingredientId/information", async function (req, res, next){
+    try{
+        //This gets the details about the ingredient, available units
+        const response = await infoAPI.ingredientInformation( req.params.ingredientId );
+        return res.json( response );
+
+    }catch(err){
+        return next(err);
+    }
+
+});
+
+router.get("/ingredients/:ingredientId/calculate", async function (req, res, next){
+    try{
+        //This retrieves from the body the id, unit and amount and retrieve the corresponding nutrien value from the API
+        const response = await infoAPI.ingredientCalculate( req.body );
+        return res.json( response );
+    }catch(err){
+        return next(err);
+    }
+
+});
+
 router.get("/user/:username", async function (req, res, next){
     try{
-        //A single username is taken
-        // console.log('res.locals', res.locals);
         const response = await User.search(req.params.username);
         return res.json( response );
 

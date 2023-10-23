@@ -20,7 +20,7 @@ CREATE TABLE recipe_info (
 );
 
 CREATE TABLE ingredients (
-    id INTEGER PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     recipe_id INTEGER REFERENCES recipe_info(id) ON DELETE CASCADE,
     name VARCHAR(50) NOT NULL,
     unit TEXT,

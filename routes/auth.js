@@ -49,7 +49,7 @@ router.post("/token", async function ( req, res, next){
         //Creation of the JWT and passed to the response
         const token = await createToken(response);
         response.token = token;
-        return res.json( { response });
+        return res.json( response );
 
     }catch(err){
         return next(err);

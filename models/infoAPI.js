@@ -1,6 +1,9 @@
 //This model handles all the communication with spoonacular API
 const { default: axios } = require("axios");
 const { API_TOKEN, API_BASE_URL } = require("../config");
+const { BadRequestError } = require("../expressError");
+
+
 require("axios");
 
 
@@ -33,9 +36,26 @@ class infoAPI {
         // The query consist in the query which is the ingredientName, number is set to 100 which is the maximum amount of results per request
         const queryParams = { query: ingredientName, number:100 };
         const res = await this.request('search', queryParams );
-        return res;
+        return res.results;
     }
     
+    static async ingredientInformation ( ingredientId ){
+        //The ingredient ID comes from the searchIngredient, this takes the relevant information like 
+        //ID, portion and unit to retrieve the information from the app
+        const queryParams = { id: ingredientId };
+        const res = await this.request(`${ingredientId}/information`);
+        return res;
+    }
+
+    static async ingredientCalculate( ingredientData ){
+        const { id, amount, unit } = ingredientData;
+        if ( !id || !amount || ! unit) throw new BadRequestError("Mising arguments");
+
+        //Since the thre required parameters are there, ingredientData passes as the queryParameters
+        const res = await this.request(`${id}/information`, ingredientData);
+        return res;
+    }
+
     //search for a ingredient
     
     //get ingredient info

@@ -12,7 +12,13 @@ VALUES(
     'anita@aol.com',
     'I like to cook deserts',
     'www.yahoo.com'
-    );
+    ),
+    (
+    'John Doe',
+    'JoHn_Do3&&',
+    'john_doe@aol.com',
+    'This is my personal info that is gonna be displayed in my bio',
+    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQOWzTBt65oJxMTZCk0xevZezcExJQC7toe1Q&usqp=CAU"');
 
 INSERT INTO recipe_info ( user_id, title, cal_count, preparation, description, servings, url_image)
 
@@ -32,14 +38,19 @@ VALUES(
     'Lleva conejo y ejotes',
     'Da risa',
     1,
-    'www.yahoo.com');
+    'www.yahoo.com'),
+    (3,
+	 'Pizza',
+     2000,
+	 'Heat it in the microwave',
+	 'Convenient and easy to make',
+	 2,
+	 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSPpHLOST0fhz_-NIOTpe9jnxAsw8IpHc5Wrg&usqp=CAU"');
 
-INSERT INTO ingredients (id, recipe_id, name, unit, amount, kcal, protein, fiber, fat, carbohydrates)
-VALUES(
-    4582,
-    1,
-    'oil',
-    'teaspoon',
+INSERT INTO ingredients (recipe_id, name, unit, amount, kcal, protein, fiber, fat, carbohydrates)
+VALUES(3,
+    'dough',
+    'kg',
     1.0,
     36.36,
     0.0,
@@ -47,9 +58,8 @@ VALUES(
     4.0,
     0.0
     ),
-    (16202,
-    1,
-    'refried beans',
+    (3,
+    'tomato sauce',
     'cup',
     0.5,
     3.3,
@@ -61,4 +71,6 @@ VALUES(
 
 INSERT INTO rating_votes ( recipe_id, user_id, rating)
 VALUES (1, 1, 5), 
-        (1, 2, 4);
+        (1, 2, 4),
+        (3, 3, 5),
+        (3, 1, 4);
