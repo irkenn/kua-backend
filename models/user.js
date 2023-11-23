@@ -99,20 +99,19 @@ class User {
         return user;
     }
 
-
-    static async get( username ){
+    static async get( userID ){
         const userRes = await db.query(
             `SELECT id,
                     username,
                     bio_info AS "bioInfo",
                     url_image AS "urlImage"
             FROM users
-            WHERE username = $1`,
-            [username]
+            WHERE id = $1`,
+            [userID]
         );
         const user = userRes.rows[0];
         
-        if (!user) throw new NotFoundError(`No user: ${username}`);
+        if (!user) throw new NotFoundError(`No user: ${userID}`);
         
         const userRecipes = await db.query(
             `SELECT *
@@ -143,42 +142,51 @@ class User {
         
         // ++++ So de deal here is to compare probably the username from the JWT
         // In order to prevent an old Token from modifiying further
-        const { username } = JWTUserData;
-        const { password, email } = data;
-        // If the authentication is not correct it will throw an error
-        
-        await this.authenticate({ username, password });
+        try {
+            const { username } = JWTUserData;
+            const { password, email } = data;
+            
+            console.log( "+++++++++++username", username);
+            // If the authentication is not correct it will throw an error
+            
+            await this.authenticate({ username, password });
 
-        //the query will be based on the hashed email address
-        const hashedEmail = crypto.createHash('sha256').update(email).digest('hex');
-        
-        // username can change, but not email or password
-        delete data.password;
-        delete data.email;
+            //the query will be based on the hashed email address
+            const hashedEmail = crypto.createHash('sha256').update(email).digest('hex');
+            
+            // username can change, but not email or password
+            delete data.password;
+            delete data.email;
 
-        const { setCols, values } = sqlForPartialUpdate(
-            data,
-            {
-                username : "username",
-                bioInfo: "bio_info",
-                urlImage: "url_image"
-            });
-        const usernameVarIdx = "$" + (values.length + 1);
-        
-        const query = `UPDATE users
-                        SET ${setCols}
-                        WHERE email = ${usernameVarIdx}
-                        RETURNING   id,
-                                    username,
-                                    bio_info AS "bioInfo",
-                                    url_image AS "urlImage"`;
-        
-        const result = await db.query(query, [...values, hashedEmail]);
-        
-        //generate and include also a new Token in the response.
-        const user = result.rows[0];
-      
-        return user;
+            const { setCols, values } = sqlForPartialUpdate(
+                data,
+                {
+                    username : "username",
+                    bioInfo: "bio_info",
+                    urlImage: "url_image"
+                });
+            const usernameVarIdx = "$" + (values.length + 1);
+            
+            const query = `UPDATE users
+                            SET ${setCols}
+                            WHERE email = ${usernameVarIdx}
+                            RETURNING   id,
+                                        username,
+                                        bio_info AS "bioInfo",
+                                        url_image AS "urlImage"`;
+            
+            
+            console.log('query', query, "values", values);
+            const result = await db.query(query, [...values, hashedEmail]);
+            console.log('result', result);
+            //generate and include also a new Token in the response.
+            const user = result.rows[0];
+            
+            return user;
+        }catch(err){
+            return err;
+        }
+
     }
 
     static async delete( data ){

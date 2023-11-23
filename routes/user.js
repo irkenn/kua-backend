@@ -29,12 +29,10 @@ router.get("/home", async function( req, res, next){
 });
 
 
-
-
-router.get("/:username", async function(req, res, next){
+router.get("/:userID", async function(req, res, next){
     try{
         //Fetches the user from the database
-        const response = await User.get(req.params.username);
+        const response = await User.get(req.params.userID);
         return res.json( response );
     }catch(err){
         return next(err);
@@ -53,8 +51,11 @@ router.patch("/:username", async function(req, res, next){
             const errs = validator.errors.map(e => e.stack);
             throw new BadRequestError(errs);
         }else if(res.locals.kuaUser.username === req.params.username ){
+            
             const response = await User.update( req.body, res.locals.kuaUser );
+            console.log('++++++++++++This is response', response);
             //Includes a new Token in the responses
+            
             const token = await createToken(response);
             response.token = token;
             

@@ -63,4 +63,22 @@ router.patch("/:recipeId", async function (req, res, next){
     }
 
 });
+
+
+router.post("/:recipeId/add", async function ( req, res, next ){
+    try{
+        // It should it compare with some schema so all the information is there
+                
+        const userId = res.locals.kuaUser.userId;  
+        const recipeId = req.params.recipeId;
+        
+        
+        const response = await Recipe.addIngredients(recipeId, req.body, userId);
+        return res.json( response );
+    }catch(err){
+        return next(err);
+    }
+
+});
+
 module.exports = router;

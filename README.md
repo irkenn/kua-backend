@@ -166,7 +166,6 @@ The response will return the user info and will also include the recipes that th
 			"id": 3,
 			"user_id": 5,
 			"title": "Pizza",
-			"cal_count": null,
 			"preparation": "Heat it in the microwave",
 			"description": "Convenient and easy to make",
 			"created_at": "2023-10-21T00:42:25.099Z",

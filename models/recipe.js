@@ -4,6 +4,7 @@ const db = require("../db");
 
 //Helper function
 const { sqlForPartialUpdate } = require("../helpers/helpers");
+const infoAPI = require("./infoAPI");
 
 const {
     NotFoundError,
@@ -33,7 +34,6 @@ class Recipe {
         const query = `SELECT
                         r.id,
                         r.title,
-                        r.cal_count AS "calCount",
                         r.preparation,
                         r.description,
                         r.created_at AS "createdAt",
@@ -44,6 +44,36 @@ class Recipe {
                           FROM rating_votes AS "ra"
                           WHERE ra.recipe_id = r.id
                       ) AS "avgRating",
+                      (
+                        SELECT ROUND(SUM(i.kcal), 0)
+                        FROM ingredients AS "i"
+                        WHERE i.recipe_id = r.id
+                      ) AS "calCount",
+                      (
+                        SELECT ROUND(SUM(i.protein) / r.servings, 0)
+                        FROM ingredients AS "i"
+                        WHERE i.recipe_id = r.id
+                      ) AS "proteinPerServing",
+                      (
+                        SELECT ROUND(SUM(i.fat) / r.servings, 0)
+                        FROM ingredients AS "i"
+                        WHERE i.recipe_id = r.id
+                      ) AS "fatPerServing",
+                      (
+                        SELECT ROUND(SUM(i.carbohydrates) / r.servings, 0)
+                        FROM ingredients AS "i"
+                        WHERE i.recipe_id = r.id
+                      ) AS "carbohydratesPerServing",
+                      (
+                        SELECT ROUND(SUM(i.fiber) / r.servings, 0)
+                        FROM ingredients AS "i"
+                        WHERE i.recipe_id = r.id
+                      ) AS "fiberPerServing",
+                      (
+                        SELECT ROUND(SUM(i.kcal) / r.servings, 0)
+                        FROM ingredients AS "i"
+                        WHERE i.recipe_id = r.id
+                      ) AS "calPerServing",
                         (
                             SELECT jsonb_build_object(
                                 'id', u.id,
@@ -71,7 +101,7 @@ class Recipe {
                     LEFT JOIN users AS "u" ON (r.user_id = u.id)
                     LEFT JOIN ingredients AS "i" ON (r.id = i.recipe_id)
                     WHERE title ILIKE ${queryLine}
-                    GROUP BY r.id, r.title, r.cal_count, r.preparation, r.description, r.created_at, r.servings, r.url_image, r.user_id;`;
+                    GROUP BY r.id, r.title, r.preparation, r.description, r.created_at, r.servings, r.url_image, r.user_id;`;
 
         //This query is a mini version of 'recipes' it does not include the ingredients.
 
@@ -88,7 +118,6 @@ class Recipe {
       const query = `SELECT
                         r.id,
                         r.title,
-                        r.cal_count AS "calCount",
                         r.preparation,
                         r.description,
                         r.created_at AS "createdAt",
@@ -99,6 +128,36 @@ class Recipe {
                           FROM rating_votes AS "ra"
                           WHERE ra.recipe_id = r.id
                       ) AS "avgRating",
+                      (
+                        SELECT ROUND(SUM(i.kcal), 0)
+                        FROM ingredients AS "i"
+                        WHERE i.recipe_id = r.id
+                      ) AS "calCount",
+                      (
+                        SELECT ROUND(SUM(i.kcal) / r.servings, 0)
+                        FROM ingredients AS "i"
+                        WHERE i.recipe_id = r.id
+                      ) AS "calPerServing",
+                      (
+                        SELECT ROUND(SUM(i.protein) / r.servings, 0)
+                        FROM ingredients AS "i"
+                        WHERE i.recipe_id = r.id
+                      ) AS "proteinPerServing",
+                      (
+                        SELECT ROUND(SUM(i.fat) / r.servings, 0)
+                        FROM ingredients AS "i"
+                        WHERE i.recipe_id = r.id
+                      ) AS "fatPerServing",
+                      (
+                        SELECT ROUND(SUM(i.carbohydrates) / r.servings, 0)
+                        FROM ingredients AS "i"
+                        WHERE i.recipe_id = r.id
+                      ) AS "carbohydratesPerServing",
+                      (
+                        SELECT ROUND(SUM(i.fiber) / r.servings, 0)
+                        FROM ingredients AS "i"
+                        WHERE i.recipe_id = r.id
+                      ) AS "fiberPerServing",
                         (
                             SELECT jsonb_build_object(
                                 'id', u.id,
@@ -126,7 +185,7 @@ class Recipe {
                     LEFT JOIN users AS "u" ON (r.user_id = u.id)
                     LEFT JOIN ingredients AS "i" ON (r.id = i.recipe_id)
                     WHERE r.id = $1
-                    GROUP BY r.id, r.title, r.cal_count, r.preparation, r.description, r.created_at, r.servings, r.url_image, r.user_id;`;
+                    GROUP BY r.id, r.title, r.preparation, r.description, r.created_at, r.servings, r.url_image, r.user_id;`;
       
       const response = await db.query(query, [recipeID]);
 
@@ -139,8 +198,6 @@ class Recipe {
     static async new( { userId, title, preparation, description, servings, urlImage } ){
       
       // jsonschema will handle if there are missing parameters
-      
-      
       const query = `INSERT INTO recipe_info
                         (user_id,
                         title,
@@ -153,7 +210,6 @@ class Recipe {
                     RETURNING id,
                               user_id AS "userID",
                               title,
-                              cal_count AS "calCount",
                               preparation,
                               description,
                               created_at AS "createdAt",
@@ -189,15 +245,12 @@ class Recipe {
                       RETURNING id,
                                 user_id AS "userId",
                                 title,
-                                cal_count AS "calCount",
                                 preparation,
                                 description,
                                 created_at AS "createdAt",
                                 servings,
                                 url_image AS "urlImage"`;      
 
-      console.log('query', query)
-      console.log('[...values, id, userId]', [...values, id, userId]);
       
       const result = await db.query(query, [...values, id, userId]);
 
@@ -207,15 +260,100 @@ class Recipe {
         //If the user is not the owner of the recipe
         throw new UnauthorizedError();
       }
+      // else there was a problem with the request
       throw new BadRequestError();
     }
   
+    static async addSingleIngredient( ingredient, userId, recipeId ){
+
+      const{ name, unit, amount  }= ingredient;
+    
+      // This is to search for the appropiate recipe info
+      const ingredientInfo = await infoAPI.ingredientCalculate( ingredient );
+
+      if(!ingredientInfo)throw new BadRequestError();
+        
+      let kcal = "";
+      let protein = "";
+      let fiber = "";
+      let fat = "";
+      let carbohydrates = "";
+      
+      //Finds the appropiate values from the array of objects
+      for(const nutrient of ingredientInfo.nutrition.nutrients){
+        
+        if(nutrient.name === 'Protein'){ 
+          protein = nutrient.amount;
+        }
+        else if(nutrient.name === 'Carbohydrates'){ 
+          carbohydrates = nutrient.amount;
+        }
+        else if(nutrient.name == 'Calories'){ 
+          kcal = nutrient.amount;
+        }
+        else if(nutrient.name == 'Fat'){
+          fat = nutrient.amount;
+        }
+        else if(nutrient.name == 'Fiber'){
+          fiber = nutrient.amount;          
+        }
+      }
+      
+      // Add the ingredient to the database (still)
+      const query = `INSERT INTO ingredients
+                        ( recipe_id, 
+                          name, 
+                          unit, 
+                          amount, 
+                          kcal, 
+                          protein, 
+                          fiber, 
+                          fat, 
+                          carbohydrates)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                    RETURNING id,
+                              recipe_id AS "recipeId", 
+                              name, 
+                              unit, 
+                              amount, 
+                              kcal, 
+                              protein, 
+                              fiber, 
+                              fat, 
+                              carbohydrates`;
+
+      const response = await db.query(query, [recipeId, name, unit, amount, kcal, protein, fiber, fat, carbohydrates]);
+
+      return response.rows[0];
+    }
+
+    static async addIngredients( recipeId, ingredientList, userId ){
+      
+      //Checks if the recipe exists in the database
+      const query1 = `SELECT * FROM recipe_info
+                                WHERE id=$1`
+      const response = await db.query(query1, [recipeId]);
+      
+      // Authentication verifies that the user editing the the recipe is the owner
+      if(!response.rows[0]) throw new BadRequestError("Ivalid recipe id");
+      else if( response.rows[0].user_id != userId ) throw new UnauthorizedError();
+
+      const responseArray = [];
+
+      for ( const ingredientId in ingredientList ){
+        const ingredient = ingredientList[ingredientId];
+        const response = await this.addSingleIngredient( ingredient, userId, recipeId );
+        responseArray.push(response);
+      }
+      return responseArray;
+    }
+
     static async home(){
       
+      //This query is a mini version of 'recipes' it does not include all the ingredients details and nutrition facts.
       const query = `SELECT
                         r.id,
                         r.title,
-                        r.cal_count AS "calCount",
                         r.preparation,
                         r.description,
                         r.created_at AS "createdAt",
@@ -225,7 +363,17 @@ class Recipe {
                           SELECT ROUND(AVG(ra.rating), 1)
                           FROM rating_votes AS "ra"
                           WHERE ra.recipe_id = r.id
-                      ) AS "avgRating",
+                      ) AS "avgRating", 
+                      (
+                        SELECT ROUND(SUM(i.kcal), 0)
+                        FROM ingredients AS "i"
+                        WHERE i.recipe_id = r.id
+                      ) AS "calCount",
+                      (
+                        SELECT ROUND(SUM(i.kcal) / r.servings, 0)
+                        FROM ingredients AS "i"
+                        WHERE i.recipe_id = r.id
+                      ) AS "calPerServing",
                         (
                             SELECT jsonb_build_object(
                                 'id', u.id,
@@ -238,15 +386,12 @@ class Recipe {
                         ) AS "user"
                     FROM recipe_info AS "r"
                     LEFT JOIN users AS "u" ON (r.user_id = u.id)
-                    GROUP BY r.id, r.title, r.cal_count, r.preparation, r.description, r.created_at, r.servings, r.url_image, r.user_id
-                    ORDER BY r.created_at;`;
-
-        //This query is a mini version of 'recipes' it does not include the ingredients.
+                    GROUP BY r.id, r.title, r.preparation, r.description, r.created_at, r.servings, r.url_image, r.user_id
+                    ORDER BY r.created_at DESC;`;
 
         const recipeRes = await db.query( query );
 
         return recipeRes.rows;
-
     }
 
   }

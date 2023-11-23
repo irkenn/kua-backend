@@ -22,7 +22,6 @@ class infoAPI {
 
         try{
             const res = await axios({url, method, params, headers});
-            console.log("This is red.data from the API", res.data);
             return res.data;
         }catch(err){
             console.error("API Error:", err.response);

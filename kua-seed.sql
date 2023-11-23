@@ -20,12 +20,11 @@ VALUES(
     'This is my personal info that is gonna be displayed in my bio',
     'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQOWzTBt65oJxMTZCk0xevZezcExJQC7toe1Q&usqp=CAU"');
 
-INSERT INTO recipe_info ( user_id, title, cal_count, preparation, description, servings, url_image)
+INSERT INTO recipe_info ( user_id, title, preparation, description, servings, url_image)
 
 VALUES(
     1,
     'Frijoles con grasa',
-    1200,
     'Mezclas los frijoles con el aceite y vualá',
     'Sacada de las obras negras más demandantes del país',
     2,
@@ -34,21 +33,19 @@ VALUES(
     (
     1,
     'Conejo con ejotes',
-    666,
     'Lleva conejo y ejotes',
     'Da risa',
     1,
     'www.yahoo.com'),
     (3,
 	 'Pizza',
-     2000,
 	 'Heat it in the microwave',
 	 'Convenient and easy to make',
 	 2,
-	 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSPpHLOST0fhz_-NIOTpe9jnxAsw8IpHc5Wrg&usqp=CAU"');
+	 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSPpHLOST0fhz_-NIOTpe9jnxAsw8IpHc5Wrg&usqp=CAU');
 
 INSERT INTO ingredients (recipe_id, name, unit, amount, kcal, protein, fiber, fat, carbohydrates)
-VALUES(3,
+VALUES(1,
     'dough',
     'kg',
     1.0,
@@ -56,9 +53,8 @@ VALUES(3,
     0.0,
     0.0,
     4.0,
-    0.0
-    ),
-    (3,
+    0.0),
+    (1,
     'tomato sauce',
     'cup',
     0.5,

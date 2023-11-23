@@ -11,7 +11,6 @@ CREATE TABLE recipe_info (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
-  cal_count INTEGER,
   preparation TEXT NOT NULL,
   description TEXT NOT NULL,
   created_at timestamp with time zone,
@@ -39,11 +38,7 @@ CREATE TABLE rating_votes (
     PRIMARY KEY (user_id, recipe_id)
 );
 
-CREATE TABLE recipe_ingredients (
-    recipe_id INTEGER REFERENCES recipe_info(id) ON DELETE CASCADE,
-    ingredients_id INTEGER REFERENCES ingredients(id) ON DELETE CASCADE,
-    PRIMARY KEY (recipe_id, ingredients_id)
-);
+
 
 
 
