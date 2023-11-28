@@ -114,7 +114,14 @@ class User {
         if (!user) throw new NotFoundError(`No user: ${userID}`);
         
         const userRecipes = await db.query(
-            `SELECT *
+            `SELECT id,
+                    user_id AS "userId",
+                    title,
+                    preparation,
+                    description,
+                    created_at AS "createdAt",
+                    servings,
+                    url_image AS "urlImage"
             FROM recipe_info 
             WHERE recipe_info.user_id = $1`, [user.id]);
         
